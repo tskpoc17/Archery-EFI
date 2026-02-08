@@ -6,37 +6,89 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>EFI 射箭計算機</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        input { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; }
-        .res { margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px; text-align: center; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; }
+        label { font-weight: bold; font-size: 14px; color: #555; display: block; margin-top: 15px; margin-bottom: 5px; }
+        
+        /* 讓輸入框和選單看起來一樣漂亮 */
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            background-color: #fff;
+            appearance: none; /* 移除預設樣式讓手機版更好看 */
+        }
+        
+        /* 特別幫選單加一個下拉箭頭符號，比較好辨識 */
+        select {
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
+        }
+
+        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; transition: background 0.2s; }
+        button:active { background: #0056b3; transform: scale(0.98); }
+        
+        .res { margin-top: 25px; padding: 20px; background: #f0f9ff; border-radius: 12px; text-align: center; border: 1px solid #bce0fd; }
+        .hint { font-size: 12px; color: #888; margin-top: 5px; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h2>🎯 EFI 計算器</h2>
+    <h2>🎯 EFI 射箭計算機</h2>
+
+    <label>選擇靶紙大小</label>
+    <select id="faceSize">
+        <option value="122">🔴 122cm (70m/60m 標準大靶)</option>
+        <option value="80">🔵 80cm (50m/30m 較小靶)</option>
+        <option value="40">🟢 40cm (18m 室內三環/單靶)</option>
+    </select>
+    <div class="hint">如果不確定直徑，請依據比賽距離選擇</div>
+
     <label>12 箭 X 座標 (逗點隔開)</label>
     <input type="text" id="coords" placeholder="例如: 1.2, -0.5, 3.1..." inputmode="decimal">
-    <label>K 值 (修正係數)</label>
+    
+    <label>K 值 (距離修正係數)</label>
     <input type="number" id="kValue" value="1" step="0.1">
+    
     <button onclick="calc()">計算 EFI</button>
+    
     <div id="out" class="res" style="display:none;">
-        EFI 值：<br><strong id="val" style="font-size: 24px; color: #007AFF;"></strong>
+        <div style="font-size: 14px; color: #555; margin-bottom: 5px;">EFI 器材寬容性指標</div>
+        <strong id="val" style="font-size: 36px; color: #007AFF;"></strong>
     </div>
 </div>
+
 <script>
 function calc() {
-    const s = 10, d = 122;
+    const s = 10;
+    // 這裡會直接抓取選單選中的 value (122, 80 或 40)
+    const d = parseFloat(document.getElementById('faceSize').value);
+    
     const k = parseFloat(document.getElementById('kValue').value);
     const x = document.getElementById('coords').value.split(',').map(Number).filter(n => !isNaN(n));
-    if (x.length < 2) return alert("請輸入數據");
+
+    if (x.length < 2) return alert("請輸入至少兩個座標數值");
+    
     const avg = x.reduce((a, b) => a + b) / x.length;
     const R = x.filter(v => v >= avg), L = x.filter(v => v < avg);
-    const m = (arr) => arr.length ? arr.reduce((a, b) => a + Math.abs(b - (arr.reduce((p,c)=>p+c)/arr.length)), 0) / arr.length : 0;
+    
+    const m = (arr) => {
+        if (!arr.length) return 0;
+        const a = arr.reduce((p,c)=>p+c)/arr.length;
+        return arr.reduce((p,c)=>p+Math.abs(c-a),0)/arr.length;
+    };
+    
     const dR = R.length ? Math.abs((R.reduce((a,b)=>a+b)/R.length) - avg) : 0;
     const dL = L.length ? Math.abs((L.reduce((a,b)=>a+b)/L.length) - avg) : 0;
+    
     const penalty = (k * dR) + (k * dL) + (k * (m(R) * R.length + m(L) * L.length) / x.length);
+    
     document.getElementById('out').style.display = 'block';
     document.getElementById('val').innerText = (s * ((d - penalty) / d) + 1).toFixed(4);
 }
