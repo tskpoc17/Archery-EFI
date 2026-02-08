@@ -174,3 +174,74 @@ function runDiag() {
 </script>
 </body>
 </html>
+<script>
+(function() {
+    // 1. 在原有的診斷按鈕下方「外掛」儲存與載入按鈕
+    window.addEventListener('load', function() {
+        const mainBtn = document.querySelector('button[onclick="runDiag()"]');
+        if (mainBtn) {
+            const pluginContainer = document.createElement('div');
+            pluginContainer.style = "display: flex; gap: 10px; margin-top: 15px;";
+            pluginContainer.innerHTML = `
+                <button id="btnSave" style="flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">💾 儲存數據</button>
+                <button id="btnLoad" style="flex:1; padding:12px; background:#6f42c1; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">📂 載入紀錄</button>
+            `;
+            mainBtn.parentNode.insertBefore(pluginContainer, mainBtn.nextSibling);
+
+            // 儲存邏輯
+            document.getElementById('btnSave').onclick = function() {
+                const data = {
+                    pxE: document.getElementById('pxE').value,
+                    pxM: document.getElementById('pxM').value,
+                    inX: document.getElementById('inX').value,
+                    pyE: document.getElementById('pyE').value,
+                    pyM: document.getElementById('pyM').value,
+                    inY: document.getElementById('inY').value,
+                    k: document.getElementById('kValue').value
+                };
+                localStorage.setItem('archery_data_backup', JSON.stringify(data));
+                alert('✅ 數據已安全儲存');
+            };
+
+            // 載入邏輯
+            document.getElementById('btnLoad').onclick = function() {
+                const saved = localStorage.getItem('archery_data_backup');
+                if (saved) {
+                    const d = JSON.parse(saved);
+                    document.getElementById('pxE').value = d.pxE;
+                    document.getElementById('pxM').value = d.pxM;
+                    document.getElementById('inX').value = d.inX;
+                    document.getElementById('pyE').value = d.pyE;
+                    document.getElementById('pyM').value = d.pyM;
+                    document.getElementById('inY').value = d.inY;
+                    document.getElementById('kValue').value = d.k;
+                    alert('📂 已載入上次儲存的數據');
+                } else {
+                    alert('❌ 尚無儲存紀錄');
+                }
+            };
+        }
+
+        // 2. 攔截原始診斷功能，自動加上「時間戳記」供截圖使用
+        const originalRunDiag = window.runDiag;
+        window.runDiag = function() {
+            originalRunDiag(); // 執行你原本的診斷
+            
+            // 執行完後，自動在結果區加上時間
+            const summaryText = document.getElementById('summaryText');
+            if (summaryText) {
+                const now = new Date();
+                const timeStr = `\n\n🕒 診斷時間：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+                // 檢查是否已經加過時間，避免重複
+                if (!summaryText.innerText.includes('🕒 診斷時間')) {
+                    summaryText.innerText += timeStr;
+                } else {
+                    // 如果已存在，則更新時間
+                    summaryText.innerText = summaryText.innerText.replace(/🕒 診斷時間：.*/, `🕒 診斷時間：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`);
+                }
+            }
+        };
+    });
+})();
+</script>
+
