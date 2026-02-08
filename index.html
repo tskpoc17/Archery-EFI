@@ -119,14 +119,14 @@ function runDiag() {
 
     // X 軸顯示
     document.getElementById('rxE').innerText = resX.efi;
-    document.getElementById('offX').innerText = `${resX.avg.toFixed(2)} cm ${resX.avg<0?"(瞄右)":"(瞄左)"}`;
+    document.getElementById('offX').innerText = `${resX.avg.toFixed(2)} cm ${resX.avg<0?"(偏左)":"(偏右)"}`;
     document.getElementById('madX').innerText = resX.mad.toFixed(2);
     const exX = resX.mR >= resX.mL ? {s:"右側", n:resX.nR} : {s:"左側", n:resX.nL};
     document.getElementById('prX').innerText = `${((exX.n/12)*100).toFixed(0)}% (${exX.s})`;
 
     // Y 軸顯示
     document.getElementById('ryE').innerText = resY.efi;
-    document.getElementById('offY').innerText = `${resY.avg.toFixed(2)} cm ${resY.avg<0?"(瞄下)":"(瞄上)"}`;
+    document.getElementById('offY').innerText = `${resY.avg.toFixed(2)} cm ${resY.avg<0?"(偏上)":"(偏下)"}`;
     document.getElementById('madY').innerText = resY.mad.toFixed(2);
     const exY = resY.mR >= resY.mL ? {s:"下側", n:resY.nR} : {s:"上側", n:resY.nL};
     document.getElementById('prY').innerText = `${((exY.n/12)*100).toFixed(0)}% (${exY.s})`;
@@ -154,7 +154,7 @@ function runDiag() {
     // 總結報告
     let summary = "";
     if (resX.efi < resY.efi) {
-        summary = "⚠️ **注意 X 軸 (水平)**：水平 EFI 較低，請優先檢查放弦動作 後手角度一致性或T字或弦影 推點確認。";
+        summary = "⚠️ **注意 X 軸 (水平)**：水平 EFI 較低，請優先檢查放弦 後手角度一致性或T字或弦影 推點確認。";
     } else if (resY.efi < resX.efi) {
         summary = "⚠️ **注意 Y 軸 (垂直)**：垂直 EFI 較低，請檢查推弓手壓力點是否穩定 按卡靠弦位置 前肩穩定。";
     } else {
