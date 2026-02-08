@@ -28,9 +28,9 @@
 </head>
 <body>
 <div class="card">
-    <h2>🎯 EFI 射箭診斷系統</h2>
+    <h2>🎯 EFI 射箭綜合診斷系統v2</h2>
 
-    <label>選擇靶紙大小</label>
+    <label>請選擇靶紙大小單位</label>
     <select id="faceSize">
         <option value="122">🔴 122cm (70m/60m)</option>
         <option value="80" selected>🔵 80cm (50m/30m)</option>
@@ -47,9 +47,9 @@
         </div>
     </div>
 
-    <label>X 軸座標輸入</label>
+    <label>X 軸座標輸入 單位：cm</label>
     <input type="text" id="coords" inputmode="decimal" placeholder="0.2, 1.7, -5.5...">
-    <div class="note">請輸入 12 支箭 X 座標（右側為正，左側為負）</div>
+    <div class="note">請輸入 12 支箭 距靶心X 座標（右側為正，左側為負）</div>
     
     <label>K 值修正係數</label>
     <input type="number" id="kValue" value="1" step="0.1">
