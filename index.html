@@ -126,7 +126,7 @@ function runDiag() {
 
     // Y 軸顯示
     document.getElementById('ryE').innerText = resY.efi;
-    document.getElementById('offY').innerText = `${resY.avg.toFixed(2)} cm ${resY.avg<0?"(偏上)":"(偏下)"}`;
+    document.getElementById('offY').innerText = `${resY.avg.toFixed(2)} cm ${resY.avg<0?"(偏下)":"(偏上)"}`;
     document.getElementById('madY').innerText = resY.mad.toFixed(2);
     const exY = resY.mR >= resY.mL ? {s:"下側", n:resY.nR} : {s:"上側", n:resY.nL};
     document.getElementById('prY').innerText = `${((exY.n/12)*100).toFixed(0)}% (${exY.s})`;
