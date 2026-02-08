@@ -4,24 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>EFI 射箭診斷系統 Pro</title>
+    <title>EFI 射箭診斷系統 Pro v2</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; }
-        h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; }
+        h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         label { font-weight: bold; font-size: 15px; color: #333; display: block; margin-top: 15px; margin-bottom: 5px; }
         .row { display: flex; gap: 10px; }
         .row > div { flex: 1; }
         input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background-color: #fff; margin-bottom: 5px; }
         .note { font-size: 12px; color: #666; background-color: #f8f9fa; padding: 8px; border-radius: 8px; line-height: 1.4; margin-bottom: 5px; }
-        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.2s; }
         button:active { background: #0056b3; transform: scale(0.98); }
         .res { margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 12px; border: 1px solid #bce0fd; }
         .stat-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #d1e9ff; font-size: 14px; align-items: center; }
         .stat-item:last-child { border-bottom: none; }
-        .stat-label { color: #555; font-weight: 500; flex-shrink: 0; margin-right: 10px; }
+        .stat-label { color: #555; font-weight: 500; }
         .stat-value { color: #333; font-weight: bold; text-align: right; }
-        .highlight { color: #007AFF; font-size: 24px; }
+        .highlight { color: #007AFF; font-size: 26px; }
         .trend-up { color: #28a745; font-weight: bold; }
         .trend-down { color: #dc3545; font-weight: bold; }
     </style>
@@ -33,23 +33,23 @@
     <label>選擇靶紙大小</label>
     <select id="faceSize">
         <option value="122">🔴 122cm (70m/60m)</option>
-        <option value="80">🔵 80cm (50m/30m)</option>
+        <option value="80" selected>🔵 80cm (50m/30m)</option>
     </select>
 
     <div class="row">
         <div>
             <label>前次 EFI</label>
-            <input type="number" id="prevEfi" step="0.0001" placeholder="7.8">
+            <input type="number" id="prevEfi" step="0.0001" placeholder="例如: 7.8">
         </div>
         <div>
             <label>前次離差</label>
-            <input type="number" id="prevMad" step="0.01" placeholder="2.5">
+            <input type="number" id="prevMad" step="0.01" placeholder="例如: 2.5">
         </div>
     </div>
 
     <label>X 軸座標輸入</label>
     <input type="text" id="coords" inputmode="decimal" placeholder="0.2, 1.7, -5.5...">
-    <div class="note">請輸入 12 支箭 X 座標（靶心右側為正，左側為負）</div>
+    <div class="note">請輸入 12 支箭 X 座標（右側為負，左側為正）</div>
     
     <label>K 值修正係數</label>
     <input type="number" id="kValue" value="1" step="0.1">
@@ -70,7 +70,7 @@
             <span id="offset" class="stat-value"></span>
         </div>
         <div class="stat-item">
-            <span class="stat-label">動作一致性評估</span>
+            <span class="stat-label">動作一致性 (加權離差)</span>
             <span id="consistency" class="stat-value"></span>
         </div>
         <div id="compMad" class="stat-item" style="display:none;">
@@ -89,7 +89,7 @@ function calc() {
     const s = 10, d = parseFloat(document.getElementById('faceSize').value);
     const k = parseFloat(document.getElementById('kValue').value);
     const rawX = document.getElementById('coords').value.split(',').map(Number).filter(n => !isNaN(n));
-    if (rawX.length < 2) return alert("請輸入數據");
+    if (rawX.length < 1) return alert("請輸入數據");
     
     const avg = rawX.reduce((a, b) => a + b) / rawX.length;
     const R = rawX.filter(v => v >= avg), L = rawX.filter(v => v < avg);
@@ -108,28 +108,30 @@ function calc() {
     document.getElementById('out').style.display = 'block';
     document.getElementById('val').innerText = currentEfi;
 
-    // EFI 比較
+    // 1. EFI 比較
     const prevEfi = parseFloat(document.getElementById('prevEfi').value);
+    const compEfiDiv = document.getElementById('compEfi');
     if (!isNaN(prevEfi)) {
-        document.getElementById('compEfi').style.display = 'flex';
+        compEfiDiv.style.display = 'flex';
         const diff = currentEfi - prevEfi;
         document.getElementById('diffEfi').innerHTML = diff > 0 ? `<span class="trend-up">↑ 提升 ${diff.toFixed(4)}</span>` : `<span class="trend-down">↓ 下降 ${Math.abs(diff).toFixed(4)}</span>`;
-    }
+    } else { compEfiDiv.style.display = 'none'; }
 
-    // 中心偏移
+    // 2. 中心偏移
     document.getElementById('offset').innerText = `${avg.toFixed(2)} cm ${avg < 0 ? "(建議瞄右調)" : (avg > 0 ? "(建議瞄左調)" : "")}`;
 
-    // 一致性趨勢
-    document.getElementById('consistency').innerText = `${currentMad.toFixed(2)} (加權離差)`;
+    // 3. 一致性趨勢 (離差比較)
+    document.getElementById('consistency').innerText = `${currentMad.toFixed(2)}`;
     const prevMad = parseFloat(document.getElementById('prevMad').value);
+    const compMadDiv = document.getElementById('compMad');
     if (!isNaN(prevMad)) {
-        document.getElementById('compMad').style.display = 'flex';
+        compMadDiv.style.display = 'flex';
         const mDiff = currentMad - prevMad;
         document.getElementById('diffMad').innerHTML = mDiff < 0 ? `<span class="trend-up">進步 (縮小 ${Math.abs(mDiff).toFixed(2)})</span>` : `<span class="trend-down">加油 (放大 ${mDiff.toFixed(2)})</span>`;
-    }
+    } else { compMadDiv.style.display = 'none'; }
 
-    // 樣本誤差機率 (離中心遠的那一群)
-    const errorSide = mR >= mL ? {side: "右側", count: R.length} : {side: "左側", count: L.length};
+    // 4. 樣本誤差機率 (判定哪一側離平均中心最遠)
+    const errorSide = mR >= mL ? {side: "右側 (負方向)", count: R.length} : {side: "左側 (正方向)", count: L.length};
     const errorProb = ((errorSide.count / 12) * 100).toFixed(0);
     document.getElementById('prob').innerText = `${errorProb}% (主誤差區：${errorSide.side})`;
 }
