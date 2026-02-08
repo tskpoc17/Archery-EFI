@@ -4,54 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>EFI 射箭器材寬容性計算機</title>
+    <title>EFI 射箭診斷系統</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 420px; }
         h2 { text-align: center; color: #333; margin-top: 0; margin-bottom: 20px; }
-        
-        label { font-weight: bold; font-size: 15px; color: #333; display: block; margin-top: 20px; margin-bottom: 8px; }
-        
-        input, select { 
-            width: 100%; 
-            padding: 12px; 
-            border: 1px solid #ddd; 
-            border-radius: 10px; 
-            box-sizing: border-box; 
-            font-size: 16px; 
-            background-color: #fff;
-            appearance: none;
-            margin-bottom: 8px; /* 下方留一點空間給說明文字 */
-        }
-
-        /* 讓選單有漂亮的箭頭 */
-        select {
-            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007AFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-            background-repeat: no-repeat;
-            background-position: right 15px top 50%;
-            background-size: 12px auto;
-        }
-
-        /* 新增：說明文字的樣式 */
-        .note {
-            font-size: 13px;
-            color: #666;
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-            line-height: 1.5;
-            margin-bottom: 5px;
-        }
-
-        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; transition: background 0.2s; }
+        label { font-weight: bold; font-size: 15px; color: #333; display: block; margin-top: 18px; margin-bottom: 5px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 16px; background-color: #fff; margin-bottom: 5px; }
+        .note { font-size: 12px; color: #666; background-color: #f8f9fa; padding: 8px; border-radius: 8px; line-height: 1.4; margin-bottom: 5px; }
+        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
         button:active { background: #0056b3; transform: scale(0.98); }
-        
-        .res { margin-top: 25px; padding: 20px; background: #f0f9ff; border-radius: 12px; text-align: center; border: 1px solid #bce0fd; }
+        .res { margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 12px; border: 1px solid #bce0fd; }
+        .stat-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #d1e9ff; font-size: 14px; }
+        .stat-item:last-child { border-bottom: none; }
+        .stat-label { color: #555; font-weight: 500; }
+        .stat-value { color: #333; font-weight: bold; }
+        .highlight { color: #007AFF; font-size: 24px; display: block; margin-top: 5px; }
+        .trend-up { color: #28a745; }
+        .trend-down { color: #dc3545; }
     </style>
 </head>
 <body>
 <div class="card">
-    <h2>🎯 EFI 射箭計算機</h2>
+    <h2>🎯 EFI 射箭診斷系統</h2>
 
     <label>選擇靶紙大小</label>
     <select id="faceSize">
@@ -59,29 +34,43 @@
         <option value="80">🔵 80cm (50m/30m 較小靶)</option>
     </select>
 
+    <label>前次 EFI 值 (選填)</label>
+    <input type="number" id="prevEfi" step="0.0001" placeholder="輸入上次的結果進行比對">
+
     <label>X 軸座標輸入</label>
-    <input type="text" id="coords" inputmode="decimal">
-    
+    <input type="text" id="coords" inputmode="decimal" placeholder="例如: 1.2, -0.5, 3.1">
     <div class="note">
-        請輸入 12 支箭的 X 軸座標<br>
-        （距靶心公分數 靶心左側為-<br>
-        請寫至小數點以下一位）<br>
+        請輸入 12 支箭 X 座標（右側為負，左側為正）<br>
         座標之間請用「半形逗點 , 」隔開
     </div>
     
     <label>K 值修正係數</label>
     <input type="number" id="kValue" value="1" step="0.1">
-
-    <div class="note">
-        設定K 值（預設為 1）<br>
-        K=欲推估距離/實測距離
-    </div>
+    <div class="note">K = 欲推估距離 / 實測距離</div>
     
-    <button onclick="calc()">計算 EFI</button>
+    <button onclick="calc()">開始分析數據</button>
     
     <div id="out" class="res" style="display:none;">
-        <div style="font-size: 14px; color: #555; margin-bottom: 5px;">EFI 器材寬容性指標</div>
-        <strong id="val" style="font-size: 36px; color: #007AFF;"></strong>
+        <div class="stat-item" style="border-bottom: 2px solid #bce0fd;">
+            <span class="stat-label">本次 EFI 指標</span>
+            <span class="stat-value"><strong id="val" class="highlight"></strong></span>
+        </div>
+        <div id="comparison" class="stat-item" style="display:none;">
+            <span class="stat-label">與前次比較</span>
+            <span id="diff" class="stat-value"></span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">中心平均偏移量</span>
+            <span id="offset" class="stat-value"></span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">動作一致性評估</span>
+            <span id="consistency" class="stat-value"></span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">樣本誤差發生機率</span>
+            <span id="prob" class="stat-value"></span>
+        </div>
     </div>
 </div>
 
@@ -90,26 +79,56 @@ function calc() {
     const s = 10;
     const d = parseFloat(document.getElementById('faceSize').value);
     const k = parseFloat(document.getElementById('kValue').value);
-    const x = document.getElementById('coords').value.split(',').map(Number).filter(n => !isNaN(n));
+    const rawX = document.getElementById('coords').value.split(',').map(Number).filter(n => !isNaN(n));
 
-    if (x.length < 2) return alert("請輸入至少兩個座標數值");
+    if (rawX.length < 2) return alert("請輸入數據");
     
-    const avg = x.reduce((a, b) => a + b) / x.length;
-    const R = x.filter(v => v >= avg), L = x.filter(v => v < avg);
-    
+    // 1. 本次 EFI 計算
+    const avg = rawX.reduce((a, b) => a + b) / rawX.length;
+    const R = rawX.filter(v => v >= avg), L = rawX.filter(v => v < avg);
     const m = (arr) => {
         if (!arr.length) return 0;
-        const a = arr.reduce((p,c)=>p+c)/arr.length;
-        return arr.reduce((p,c)=>p+Math.abs(c-a),0)/arr.length;
+        const subAvg = arr.reduce((a, b) => a + b) / arr.length;
+        return arr.reduce((a, b) => a + Math.abs(b - subAvg), 0) / arr.length;
     };
-    
+    const mR = m(R), mL = m(L);
     const dR = R.length ? Math.abs((R.reduce((a,b)=>a+b)/R.length) - avg) : 0;
     const dL = L.length ? Math.abs((L.reduce((a,b)=>a+b)/L.length) - avg) : 0;
-    
-    const penalty = (k * dR) + (k * dL) + (k * (m(R) * R.length + m(L) * L.length) / x.length);
-    
+    const penalty = (k * dR) + (k * dL) + (k * (mR * R.length + mL * L.length) / rawX.length);
+    const currentEfi = parseFloat((s * ((d - penalty) / d) + 1).toFixed(4));
+
+    // 顯示結果區域
     document.getElementById('out').style.display = 'block';
-    document.getElementById('val').innerText = (s * ((d - penalty) / d) + 1).toFixed(4);
+    document.getElementById('val').innerText = currentEfi;
+
+    // 2. 與前次比較
+    const prevEfi = parseFloat(document.getElementById('prevEfi').value);
+    const compDiv = document.getElementById('comparison');
+    if (!isNaN(prevEfi)) {
+        compDiv.style.display = 'flex';
+        const diff = currentEfi - prevEfi;
+        if (diff > 0) {
+            document.getElementById('diff').innerHTML = `<span class="trend-up">↑ 提升 ${diff.toFixed(4)}</span>`;
+        } else if (diff < 0) {
+            document.getElementById('diff').innerHTML = `<span class="trend-down">↓ 下降 ${Math.abs(diff).toFixed(4)}</span>`;
+        } else {
+            document.getElementById('diff').innerText = "持平";
+        }
+    } else {
+        compDiv.style.display = 'none';
+    }
+
+    // 3. 中心平均偏移量與建議
+    let advice = avg < 0 ? " (建議瞄準器向右調)" : (avg > 0 ? " (建議瞄準器向左調)" : "");
+    document.getElementById('offset').innerText = `${avg.toFixed(2)} cm ${advice}`;
+
+    // 4. 動作一致性評估 (加權 MAD)
+    const consistency = ((R.length * mR) + (L.length * mL)) / rawX.length;
+    document.getElementById('consistency').innerText = consistency.toFixed(2) + " (加權離差)";
+
+    // 5. 誤差發生機率 (箭數/12)
+    const prob = (rawX.length / 12).toFixed(2);
+    document.getElementById('prob').innerText = prob;
 }
 </script>
 </body>
