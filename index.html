@@ -182,28 +182,27 @@ function runDiag() {
         const mainBtn = document.querySelector('button[onclick="runDiag()"]');
         if (!mainBtn) return;
 
-        // 1. 建立外掛 UI 區塊 (調整按鈕比例與刪除重複按鈕)
         const pluginContainer = document.createElement('div');
         pluginContainer.style = "margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #ddd;";
         
+        // 修正點：在按鈕 style 加入 display:flex; align-items:center; justify-content:center;
         pluginContainer.innerHTML = `
-            <div style="font-weight:bold; font-size:14px; margin-bottom:8px; color:#555;">💾 歷史紀錄管理</div>
-            <button id="btnSave" style="width:100%; padding:10px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">🕒 以當前時間儲存數據</button>
+            <div style="font-weight:bold; font-size:14px; margin-bottom:10px; color:#555;">💾 歷史紀錄管理</div>
+            <button id="p_btnSave" style="width:100%; padding:0; height:48px; background:#28a745; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer; margin-bottom:12px; font-size:16px; display:flex; align-items:center; justify-content:center;">🕒 以當前時間儲存數據</button>
             
-            <div style="display:flex; gap:5px; align-items: center;">
-                <select id="recordSelect" style="flex:2; padding:10px; border-radius:8px; border:1px solid #ccc; height:40px;"></select>
-                <button id="btnLoad" style="flex:2; height:40px; background:#6f42c1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">載入</button>
-                <button id="btnDel" style="width:60px; height:40px; background:#dc3545; color:white; border:none; border-radius:8px; font-size:13px; cursor:pointer;">刪除</button>
+            <div style="display:flex; gap:8px; align-items: center;">
+                <select id="p_recordSelect" style="flex:1.2; padding:0 10px; border-radius:8px; border:1px solid #ccc; height:48px; font-size:14px; background:white;"></select>
+                <button id="p_btnLoad" style="flex:2; height:48px; background:#6f42c1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center;">載入紀錄</button>
+                <button id="p_btnDel" style="width:55px; height:48px; background:#dc3545; color:white; border:none; border-radius:8px; font-size:13px; cursor:pointer; display:flex; align-items:center; justify-content:center;">刪除</button>
             </div>
         `;
         mainBtn.parentNode.insertBefore(pluginContainer, mainBtn.nextSibling);
 
-        const recordSelect = document.getElementById('recordSelect');
+        const recordSelect = document.getElementById('p_recordSelect');
 
-        // 更新下拉選單
         const updateDropdown = () => {
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            recordSelect.innerHTML = '<option value="">-- 紀錄 --</option>';
+            recordSelect.innerHTML = '<option value="">紀錄</option>';
             Object.keys(history).sort().reverse().forEach(time => {
                 const opt = document.createElement('option');
                 opt.value = time;
@@ -212,21 +211,14 @@ function runDiag() {
             });
         };
 
-        // 儲存功能
-        document.getElementById('btnSave').onclick = function() {
+        document.getElementById('p_btnSave').onclick = function() {
             const now = new Date();
             const timeKey = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
-            
             const currentData = {
-                pxE: document.getElementById('pxE').value,
-                pxM: document.getElementById('pxM').value,
-                inX: document.getElementById('inX').value,
-                pyE: document.getElementById('pyE').value,
-                pyM: document.getElementById('pyM').value,
-                inY: document.getElementById('inY').value,
+                pxE: document.getElementById('pxE').value, pxM: document.getElementById('pxM').value, inX: document.getElementById('inX').value,
+                pyE: document.getElementById('pyE').value, pyM: document.getElementById('pyM').value, inY: document.getElementById('inY').value,
                 k: document.getElementById('kValue').value
             };
-
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
             history[timeKey] = currentData;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
@@ -234,28 +226,22 @@ function runDiag() {
             alert('✅ 已存為：' + timeKey);
         };
 
-        // 載入功能 (大長方形)
-        document.getElementById('btnLoad').onclick = function() {
+        document.getElementById('p_btnLoad').onclick = function() {
             const timeKey = recordSelect.value;
             if (!timeKey) return alert('請選擇紀錄');
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
             const d = history[timeKey];
             if (d) {
-                document.getElementById('pxE').value = d.pxE;
-                document.getElementById('pxM').value = d.pxM;
-                document.getElementById('inX').value = d.inX;
-                document.getElementById('pyE').value = d.pyE;
-                document.getElementById('pyM').value = d.pyM;
-                document.getElementById('inY').value = d.inY;
+                document.getElementById('pxE').value = d.pxE; document.getElementById('pxM').value = d.pxM; document.getElementById('inX').value = d.inX;
+                document.getElementById('pyE').value = d.pyE; document.getElementById('pyM').value = d.pyM; document.getElementById('inY').value = d.inY;
                 document.getElementById('kValue').value = d.k;
-                alert('📂 已載入數據');
+                alert('📂 載入成功');
             }
         };
 
-        // 刪除功能 (小方塊)
-        document.getElementById('btnDel').onclick = function() {
+        document.getElementById('p_btnDel').onclick = function() {
             const timeKey = recordSelect.value;
-            if (!timeKey) return alert('請選擇紀錄');
+            if (!timeKey) return alert('請選擇');
             if (confirm('確定刪除？')) {
                 const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
                 delete history[timeKey];
@@ -266,7 +252,6 @@ function runDiag() {
 
         updateDropdown();
 
-        // 2. 攔截原始診斷功能，自動加上時間欄位
         const originalRunDiag = window.runDiag;
         window.runDiag = function() {
             originalRunDiag();
