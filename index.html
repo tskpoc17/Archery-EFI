@@ -176,83 +176,13 @@ function runDiag() {
 </html>
 <script>
 (function() {
-    // 1. 在原有的診斷按鈕下方「外掛」儲存與載入按鈕
-    window.addEventListener('load', function() {
-        const mainBtn = document.querySelector('button[onclick="runDiag()"]');
-        if (mainBtn) {
-            const pluginContainer = document.createElement('div');
-            pluginContainer.style = "display: flex; gap: 10px; margin-top: 15px;";
-            pluginContainer.innerHTML = `
-                <button id="btnSave" style="flex:1; padding:12px; background:#28a745; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">💾 儲存數據</button>
-                <button id="btnLoad" style="flex:1; padding:12px; background:#6f42c1; color:white; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">📂 載入紀錄</button>
-            `;
-            mainBtn.parentNode.insertBefore(pluginContainer, mainBtn.nextSibling);
-
-            // 儲存邏輯
-            document.getElementById('btnSave').onclick = function() {
-                const data = {
-                    pxE: document.getElementById('pxE').value,
-                    pxM: document.getElementById('pxM').value,
-                    inX: document.getElementById('inX').value,
-                    pyE: document.getElementById('pyE').value,
-                    pyM: document.getElementById('pyM').value,
-                    inY: document.getElementById('inY').value,
-                    k: document.getElementById('kValue').value
-                };
-                localStorage.setItem('archery_data_backup', JSON.stringify(data));
-                alert('✅ 數據已安全儲存');
-            };
-
-            // 載入邏輯
-            document.getElementById('btnLoad').onclick = function() {
-                const saved = localStorage.getItem('archery_data_backup');
-                if (saved) {
-                    const d = JSON.parse(saved);
-                    document.getElementById('pxE').value = d.pxE;
-                    document.getElementById('pxM').value = d.pxM;
-                    document.getElementById('inX').value = d.inX;
-                    document.getElementById('pyE').value = d.pyE;
-                    document.getElementById('pyM').value = d.pyM;
-                    document.getElementById('inY').value = d.inY;
-                    document.getElementById('kValue').value = d.k;
-                    alert('📂 已載入上次儲存的數據');
-                } else {
-                    alert('❌ 尚無儲存紀錄');
-                }
-            };
-        }
-
-        // 2. 攔截原始診斷功能，自動加上「時間戳記」供截圖使用
-        const originalRunDiag = window.runDiag;
-        window.runDiag = function() {
-            originalRunDiag(); // 執行你原本的診斷
-            
-            // 執行完後，自動在結果區加上時間
-            const summaryText = document.getElementById('summaryText');
-            if (summaryText) {
-                const now = new Date();
-                const timeStr = `\n\n🕒 診斷時間：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-                // 檢查是否已經加過時間，避免重複
-                if (!summaryText.innerText.includes('🕒 診斷時間')) {
-                    summaryText.innerText += timeStr;
-                } else {
-                    // 如果已存在，則更新時間
-                    summaryText.innerText = summaryText.innerText.replace(/🕒 診斷時間：.*/, `🕒 診斷時間：${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`);
-                }
-            }
-        };
-    });
-})();
-</script>
-<script>
-(function() {
     const STORAGE_KEY = 'archery_history_list';
 
     window.addEventListener('load', function() {
         const mainBtn = document.querySelector('button[onclick="runDiag()"]');
         if (!mainBtn) return;
 
-        // 1. 建立外掛 UI 區塊
+        // 1. 建立外掛 UI 區塊 (調整按鈕比例與刪除重複按鈕)
         const pluginContainer = document.createElement('div');
         pluginContainer.style = "margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #ddd;";
         
@@ -260,10 +190,10 @@ function runDiag() {
             <div style="font-weight:bold; font-size:14px; margin-bottom:8px; color:#555;">💾 歷史紀錄管理</div>
             <button id="btnSave" style="width:100%; padding:10px; background:#28a745; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-bottom:10px;">🕒 以當前時間儲存數據</button>
             
-            <div style="display:flex; gap:5px;">
-                <select id="recordSelect" style="flex:2; padding:8px; border-radius:8px; border:1px solid #ccc;"></select>
-                <button id="btnLoad" style="flex:1; padding:8px; background:#6f42c1; color:white; border:none; border-radius:8px; font-size:13px; cursor:pointer;">載入</button>
-                <button id="btnDel" style="padding:8px; background:#dc3545; color:white; border:none; border-radius:8px; font-size:13px; cursor:pointer;">刪除</button>
+            <div style="display:flex; gap:5px; align-items: center;">
+                <select id="recordSelect" style="flex:2; padding:10px; border-radius:8px; border:1px solid #ccc; height:40px;"></select>
+                <button id="btnLoad" style="flex:2; height:40px; background:#6f42c1; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">載入</button>
+                <button id="btnDel" style="width:60px; height:40px; background:#dc3545; color:white; border:none; border-radius:8px; font-size:13px; cursor:pointer;">刪除</button>
             </div>
         `;
         mainBtn.parentNode.insertBefore(pluginContainer, mainBtn.nextSibling);
@@ -273,7 +203,7 @@ function runDiag() {
         // 更新下拉選單
         const updateDropdown = () => {
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-            recordSelect.innerHTML = '<option value="">-- 選擇歷史紀錄 --</option>';
+            recordSelect.innerHTML = '<option value="">-- 紀錄 --</option>';
             Object.keys(history).sort().reverse().forEach(time => {
                 const opt = document.createElement('option');
                 opt.value = time;
@@ -282,7 +212,7 @@ function runDiag() {
             });
         };
 
-        // 儲存功能 (以時間為名)
+        // 儲存功能
         document.getElementById('btnSave').onclick = function() {
             const now = new Date();
             const timeKey = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
@@ -300,19 +230,16 @@ function runDiag() {
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
             history[timeKey] = currentData;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-            
             updateDropdown();
             alert('✅ 已存為：' + timeKey);
         };
 
-        // 載入功能
+        // 載入功能 (大長方形)
         document.getElementById('btnLoad').onclick = function() {
             const timeKey = recordSelect.value;
-            if (!timeKey) return alert('請先選擇一筆紀錄');
-            
+            if (!timeKey) return alert('請選擇紀錄');
             const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
             const d = history[timeKey];
-            
             if (d) {
                 document.getElementById('pxE').value = d.pxE;
                 document.getElementById('pxM').value = d.pxM;
@@ -321,15 +248,15 @@ function runDiag() {
                 document.getElementById('pyM').value = d.pyM;
                 document.getElementById('inY').value = d.inY;
                 document.getElementById('kValue').value = d.k;
-                alert('📂 已載入 ' + timeKey + ' 的數據');
+                alert('📂 已載入數據');
             }
         };
 
-        // 刪除功能
+        // 刪除功能 (小方塊)
         document.getElementById('btnDel').onclick = function() {
             const timeKey = recordSelect.value;
-            if (!timeKey) return alert('請選擇要刪除的紀錄');
-            if (confirm('確定要刪除 ' + timeKey + ' 嗎？')) {
+            if (!timeKey) return alert('請選擇紀錄');
+            if (confirm('確定刪除？')) {
                 const history = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
                 delete history[timeKey];
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
@@ -339,7 +266,7 @@ function runDiag() {
 
         updateDropdown();
 
-        // 2. 攔截原始診斷功能，自動更新截圖時間 (沿用功能)
+        // 2. 攔截原始診斷功能，自動加上時間欄位
         const originalRunDiag = window.runDiag;
         window.runDiag = function() {
             originalRunDiag();
@@ -357,4 +284,3 @@ function runDiag() {
     });
 })();
 </script>
-
