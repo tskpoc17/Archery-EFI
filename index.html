@@ -131,7 +131,7 @@ function calc() {
     } else { compMadDiv.style.display = 'none'; }
 
     // 4. 樣本誤差機率 (判定哪一側離平均中心最遠)
-    const errorSide = mR >= mL ? {side: "右側 (負方向)", count: R.length} : {side: "左側 (正方向)", count: L.length};
+    const errorSide = mR >= mL ? {side: "右側 ", count: R.length} : {side: "左側 ", count: L.length};
     const errorProb = ((errorSide.count / 12) * 100).toFixed(0);
     document.getElementById('prob').innerText = `${errorProb}% (主誤差區：${errorSide.side})`;
 }
