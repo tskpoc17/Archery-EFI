@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>EFI 射箭計算機</title>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        input { width: 100%; padding: 12px; margin: 10px 0 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #007AFF; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; }
+        .res { margin-top: 20px; padding: 15px; background: #e7f3ff; border-radius: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>🎯 EFI 計算器</h2>
+    <label>12 箭 X 座標 (逗點隔開)</label>
+    <input type="text" id="coords" placeholder="例如: 1.2, -0.5, 3.1..." inputmode="decimal">
+    <label>K 值 (修正係數)</label>
+    <input type="number" id="kValue" value="1" step="0.1">
+    <button onclick="calc()">計算 EFI</button>
+    <div id="out" class="res" style="display:none;">
+        EFI 值：<br><strong id="val" style="font-size: 24px; color: #007AFF;"></strong>
+    </div>
+</div>
+<script>
+function calc() {
+    const s = 10, d = 122;
+    const k = parseFloat(document.getElementById('kValue').value);
+    const x = document.getElementById('coords').value.split(',').map(Number).filter(n => !isNaN(n));
+    if (x.length < 2) return alert("請輸入數據");
+    const avg = x.reduce((a, b) => a + b) / x.length;
+    const R = x.filter(v => v >= avg), L = x.filter(v => v < avg);
+    const m = (arr) => arr.length ? arr.reduce((a, b) => a + Math.abs(b - (arr.reduce((p,c)=>p+c)/arr.length)), 0) / arr.length : 0;
+    const dR = R.length ? Math.abs((R.reduce((a,b)=>a+b)/R.length) - avg) : 0;
+    const dL = L.length ? Math.abs((L.reduce((a,b)=>a+b)/L.length) - avg) : 0;
+    const penalty = (k * dR) + (k * dL) + (k * (m(R) * R.length + m(L) * L.length) / x.length);
+    document.getElementById('out').style.display = 'block';
+    document.getElementById('val').innerText = (s * ((d - penalty) / d) + 1).toFixed(4);
+}
+</script>
+</body>
+</html>
