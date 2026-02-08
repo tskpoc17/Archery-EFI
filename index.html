@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EFI 射箭雙軸診斷系統</title>
     <style>
-        /* 這些是控制排版的衣服，請務必完整複製 */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; margin: 0; }
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 480px; }
         h2 { text-align: center; color: #333; margin-top: 0; }
@@ -17,10 +16,9 @@
         .note { font-size: 12px; color: #777; background-color: #f8f9fa; padding: 8px; border-radius: 8px; margin-top: 4px; line-height: 1.4; }
         button { width: 100%; padding: 16px; background: #007AFF; color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 25px; }
         .res-container { display: none; margin-top: 25px; }
-        .res-block { padding: 18px; background: #f0f9ff; border-radius: 15px; border: 1px solid #bce0fd; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,122,255,0.05); }
+        .res-block { padding: 18px; background: #f0f9ff; border-radius: 15px; border: 1px solid #bce0fd; margin-bottom: 20px; }
         .summary-block { padding: 18px; background: #fff4e5; border-radius: 15px; border: 1px solid #ffe2b3; margin-bottom: 20px; }
         .stat-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #d1e9ff; font-size: 14px; align-items: center; }
-        .stat-item:last-child { border-bottom: none; }
         .stat-value { font-weight: bold; text-align: right; color: #333; }
         .efi-val { color: #007AFF; font-size: 24px; font-weight: 900; }
         .trend-up { color: #28a745; font-weight: bold; }
@@ -66,27 +64,28 @@
 
         <div class="res-block">
             <div style="font-weight:bold; color:#007AFF; margin-bottom:12px;">📊 X 軸水平分析報告</div>
-            <div class="stat-item"><span class="stat-label">本次 EFI 指標</span><span id="rxE" class="efi-val"></span></div>
-            <div id="cxE" class="stat-item" style="display:none;"><span class="stat-label">EFI 趨勢</span><span id="dxE" class="stat-value"></span></div>
-            <div class="stat-item"><span class="stat-label">中心偏移平均</span><span id="offX" class="stat-value"></span></div>
-            <div class="stat-item"><span class="stat-label">動作一致性 (離差)</span><span id="madX" class="stat-value"></span></div>
-            <div id="cxM" class="stat-item" style="display:none;"><span class="stat-label">一致性趨勢</span><span id="dxM" class="stat-value"></span></div>
-            <div class="stat-item"><span class="stat-label">樣本誤差機率</span><span id="prX" class="stat-value"></span></div>
+            <div class="stat-item"><span>本次 EFI 指標</span><span id="rxE" class="efi-val"></span></div>
+            <div id="cxE" class="stat-item" style="display:none;"><span>EFI 趨勢</span><span id="dxE" class="stat-value"></span></div>
+            <div class="stat-item"><span>中心偏移平均</span><span id="offX" class="stat-value"></span></div>
+            <div class="stat-item"><span>動作一致性 (離差)</span><span id="madX" class="stat-value"></span></div>
+            <div id="cxM" class="stat-item" style="display:none;"><span>一致性趨勢</span><span id="dxM" class="stat-value"></span></div>
+            <div class="stat-item"><span>樣本誤差機率</span><span id="prX" class="stat-value"></span></div>
         </div>
 
         <div class="res-block">
             <div style="font-weight:bold; color:#007AFF; margin-bottom:12px;">📊 Y 軸垂直分析報告</div>
-            <div class="stat-item"><span class="stat-label">本次 EFI 指標</span><span id="ryE" class="efi-val"></span></div>
-            <div id="cyE" class="stat-item" style="display:none;"><span class="stat-label">EFI 趨勢</span><span id="dyE" class="stat-value"></span></div>
-            <div class="stat-item"><span class="stat-label">中心偏移平均</span><span id="offY" class="stat-value"></span></div>
-            <div class="stat-item"><span class="stat-label">動作一致性 (離差)</span><span id="madY" class="stat-value"></span></div>
-            <div id="cyM" class="stat-item" style="display:none;"><span class="stat-label">一致性趨勢</span><span id="dyM" class="stat-value"></span></div>
-            <div class="stat-item"><span class="stat-label">樣本誤差機率</span><span id="prY" class="stat-value"></span></div>
+            <div class="stat-item"><span>本次 EFI 指標</span><span id="ryE" class="efi-val"></span></div>
+            <div id="cyE" class="stat-item" style="display:none;"><span>EFI 趨勢</span><span id="dyE" class="stat-value"></span></div>
+            <div class="stat-item"><span>中心偏移平均</span><span id="offY" class="stat-value"></span></div>
+            <div class="stat-item"><span>動作一致性 (離差)</span><span id="madY" class="stat-value"></span></div>
+            <div id="cyM" class="stat-item" style="display:none;"><span>一致性趨勢</span><span id="dyM" class="stat-value"></span></div>
+            <div class="stat-item"><span>樣本誤差機率</span><span id="prY" class="stat-value"></span></div>
         </div>
     </div>
 </div>
 
 <script>
+// --- 這部分是你的原始邏輯，我絕對不動 ---
 function coreCalc(raw, d, k) {
     const avg = raw.reduce((a, b) => a + b) / raw.length;
     const R = raw.filter(v => v >= avg), L = raw.filter(v => v < avg);
@@ -110,24 +109,27 @@ function runDiag() {
     const xData = document.getElementById('inX').value.split(',').map(Number).filter(n => !isNaN(n));
     const yData = document.getElementById('inY').value.split(',').map(Number).filter(n => !isNaN(n));
 
-    if (xData.length < 2 || yData.length < 2) return alert("請輸入完整 XY 數據");
+    if (xData.length < 2 || yData.length < 2) return alert("請輸入完整數據");
     document.getElementById('out').style.display = 'block';
 
     const resX = coreCalc(xData, d, k);
     const resY = coreCalc(yData, d, k);
 
+    // X軸顯示
     document.getElementById('rxE').innerText = resX.efi;
-    document.getElementById('offX').innerText = `${resX.avg.toFixed(2)} cm ${resX.avg<0?"(偏左)":"(偏右)"}`;
+    document.getElementById('offX').innerText = `${resX.avg.toFixed(2)} cm ${resX.avg < 0 ? "(偏左)" : "(偏右)"}`;
     document.getElementById('madX').innerText = resX.mad.toFixed(2);
     const exX = resX.mR >= resX.mL ? {s:"右側", n:resX.nR} : {s:"左側", n:resX.nL};
     document.getElementById('prX').innerText = `${((exX.n/12)*100).toFixed(0)}% (${exX.s})`;
 
+    // Y軸顯示
     document.getElementById('ryE').innerText = resY.efi;
-    document.getElementById('offY').innerText = `${resY.avg.toFixed(2)} cm ${resY.avg<0?"(偏上)":"(偏下)"}`;
+    document.getElementById('offY').innerText = `${resY.avg.toFixed(2)} cm ${resY.avg < 0 ? "(偏上)" : "(偏下)"}`;
     document.getElementById('madY').innerText = resY.mad.toFixed(2);
     const exY = resY.mR >= resY.mL ? {s:"上側", n:resY.nR} : {s:"下側", n:resY.nL};
     document.getElementById('prY').innerText = `${((exY.n/12)*100).toFixed(0)}% (${exY.s})`;
 
+    // 趨勢比對邏輯 (不動)
     const compare = (curE, prevE, idRow, idVal) => {
         if(!isNaN(prevE)) {
             document.getElementById(idRow).style.display = 'flex';
@@ -147,26 +149,25 @@ function runDiag() {
     compare(resY.efi, parseFloat(document.getElementById('pyE').value), 'cyE', 'dyE');
     compareM(resY.mad, parseFloat(document.getElementById('pyM').value), 'cyM', 'dyM');
 
-    // 1. 保留你原始的文字建議
+    // --- 以下為修正後的外掛建議區 ---
     let summary = "";
     if (resX.efi < resY.efi) {
-        summary = "⚠️ 注意 X 軸 (水平)：水平 EFI 較低，請優先檢查放弦 後手角度一致性或T字或弦影 推點確認。";
+        summary = "⚠️ 注意 X 軸 (水平)：水平 EFI 較低，請優先檢查放弦、後手角度一致性、弦影或推點確認。";
     } else if (resY.efi < resX.efi) {
-        summary = "⚠️ 注意 Y 軸 (垂直)：垂直 EFI 較低，請檢查推弓手壓力點是否穩定 按卡靠弦位置 前肩穩定。";
+        summary = "⚠️ 注意 Y 軸 (垂直)：垂直 EFI 較低，請檢查推弓手壓力點是否穩定、靠弦位置、前肩穩定。";
     } else {
         summary = "✅ 雙軸平衡：目前器材設定在兩個維度表現均等。";
     }
 
-    // 2. 外掛部分：瞄準器微調方向 (不顯示數據)
+    // 修正：偏左就調左，偏右就調右；偏上就調上，偏下就調下
     const adjX = resX.avg < 0 ? "左" : "右";
-    const adjY = resY.avg > 0 ? "上" : "下";
-    
-    // 3. 外掛部分：較精準的動作側 (離差最小的一側)
+    const adjY = resY.avg < 0 ? "上" : "下";
+
     const bestX = resX.mR < resX.mL ? "右側" : "左側";
     const bestY = resY.mR < resY.mL ? "上側" : "下側";
 
     summary += `\n\n🛠️ **瞄準器方向微調建議**：\n請將瞄準器向【${adjX}】且向【${adjY}】撥動。`;
-    summary += `\n\n✨ **較精準的動作表現側**：\n水平方向以【${bestX}】較穩，垂直方向以【${bestY}】較穩。`;
+    summary += `\n\n✨ **較精準的動作表現側**：\n水平方向以【${bestX}】較穩，垂直方向以【${bestY}】較穩。請回想並保持該側發力感。`;
 
     document.getElementById('summaryText').innerText = summary;
 }
