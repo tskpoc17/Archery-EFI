@@ -178,5 +178,205 @@
 
     drawTarget();
 </script>
+    <script>
+(function() {
+    /**
+     * 功能一：獨立雙軸座標紀錄表
+     * 說明：動態在頁面上插入一個區塊來顯示座標紀錄
+     */
+    function initCoordinateTablePlugin() {
+        // 1. 尋找插入點 (放在瞄準建議區塊的下方)
+        const container = document.querySelector('.md\\:col-span-2.flex.flex-col');
+        if (!container) return;
+
+        // 2. 創建紀錄區塊的 HTML 結構
+        const recordBox = document.createElement('div');
+        recordBox.id = 'coordinateRecordBox';
+        recordBox.className = 'mt-6 w-full bg-gray-50 p-6 rounded-xl border border-gray-200';
+        recordBox.innerHTML = `
+            <h2 class="text-xl font-bold text-gray-800 mb-4">獨立著箭座標紀錄 (CM)</h2>
+            <div class="overflow-y-auto max-h-64">
+                <table class="min-w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-100 sticky top-0">
+                        <tr>
+                            <th scope="col" class="px-4 py-2 rounded-tl-lg">#</th>
+                            <th scope="col" class="px-4 py-2">X 軸 (水平)</th>
+                            <th scope="col" class="px-4 py-2 rounded-tr-lg">Y 軸 (垂直)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coordinateTableBody" class="bg-white divide-y divide-gray-100">
+                        <tr><td colspan="3" class="px-4 py-2 text-center text-gray-400">尚無數據</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+        container.appendChild(recordBox);
+
+        // 3. 定義更新表格的函數
+        window.updatePluginTable = function() {
+            const tbody = document.getElementById('coordinateTableBody');
+            if (!tbody) return;
+
+            // 讀取全域變數 'arrows' (來自原始腳本)
+            if (typeof arrows === 'undefined' || arrows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="px-4 py-2 text-center text-gray-400">尚無數據</td></tr>';
+                return;
+            }
+
+            let htmlStr = '';
+            arrows.forEach((arrow, index) => {
+                // X 軸右正左負，Y 軸上正下負，保留兩位小數
+                const displayX = (arrow.x >= 0 ? '+' : '') + arrow.x.toFixed(2);
+                const displayY = (arrow.y >= 0 ? '+' : '') + arrow.y.toFixed(2);
+                
+                htmlStr += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-2 font-medium text-gray-900">${index + 1}</td>
+                        <td class="px-4 py-2 font-mono ${arrow.x > 0 ? 'text-red-600' : (arrow.x < 0 ? 'text-blue-600' : '')}">${displayX}</td>
+                        <td class="px-4 py-2 font-mono ${arrow.y > 0 ? 'text-red-600' : (arrow.y < 0 ? 'text-blue-600' : '')}">${displayY}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = htmlStr;
+            // 自動捲動到底部
+            tbody.parentElement.scrollTop = tbody.parentElement.scrollHeight;
+        }
+
+        // 4. 監聽主畫布的點擊事件，在原始腳本執行後更新表格
+        const mainCanvas = document.getElementById('targetCanvas');
+        mainCanvas.addEventListener('click', () => {
+            // 使用 setTimeout 確保在原始腳本的 click 事件處理完畢後才執行
+            setTimeout(window.updatePluginTable, 50);
+        });
+
+        // 5. 監聽重置按鈕
+        const resetBtn = document.querySelector('button[onclick="resetAll()"]');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                setTimeout(window.updatePluginTable, 50);
+            });
+        }
+    }
+
+    /**
+     * 功能二：點擊區域放大鏡
+     * 說明：在滑鼠按下瞄準時顯示放大鏡
+     */
+    function initMagnifierPlugin() {
+        const mainCanvas = document.getElementById('targetCanvas');
+        if (!mainCanvas) return;
+
+        // 設定參數
+        const ZOOM_LEVEL = 3; // 放大倍率
+        const LOUPE_SIZE = 150; // 放大鏡直徑 (px)
+
+        // 創建放大鏡 Canvas
+        const loupe = document.createElement('canvas');
+        loupe.width = LOUPE_SIZE;
+        loupe.height = LOUPE_SIZE;
+        loupe.style.position = 'fixed';
+        loupe.style.borderRadius = '50%';
+        loupe.style.border = '3px solid rgba(255, 0, 0, 0.5)';
+        loupe.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+        loupe.style.pointerEvents = 'none'; // 讓滑鼠事件穿透放大鏡
+        loupe.style.display = 'none';
+        loupe.style.zIndex = '9999';
+        loupe.style.backgroundColor = 'white';
+        document.body.appendChild(loupe);
+
+        const loupeCtx = loupe.getContext('2d');
+        let isPanning = false;
+
+        // 繪製放大鏡內容的核心函數
+        function drawLoupe(clientX, clientY) {
+            const rect = mainCanvas.getBoundingClientRect();
+            // 計算滑鼠在 canvas 內的相對座標
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            // 檢查是否超出畫布邊界
+            if (x < 0 || y < 0 || x > mainCanvas.width || y > mainCanvas.height) {
+                loupe.style.display = 'none';
+                return;
+            }
+            loupe.style.display = 'block';
+
+            // 設定放大鏡在螢幕上的位置 (稍微偏移以免擋住游標)
+            loupe.style.left = (clientX + 20) + 'px';
+            loupe.style.top = (clientY - LOUPE_SIZE / 2) + 'px';
+
+            // 清空放大鏡
+            loupeCtx.clearRect(0, 0, LOUPE_SIZE, LOUPE_SIZE);
+            loupeCtx.save();
+
+            // 創建圓形剪裁區域
+            loupeCtx.beginPath();
+            loupeCtx.arc(LOUPE_SIZE / 2, LOUPE_SIZE / 2, LOUPE_SIZE / 2, 0, Math.PI * 2);
+            loupeCtx.clip();
+
+            // --- 核心魔法：繪製放大內容 ---
+            // 來源：主畫布 (mainCanvas)
+            // 來源 X, Y：以滑鼠為中心，向左上偏移半個放大鏡的視野範圍
+            // 來源寬高：放大鏡尺寸除以倍率
+            // 目標 X, Y, 寬高：填滿整個放大鏡 Canvas
+            
+            const sourceX = x - (LOUPE_SIZE / 2 / ZOOM_LEVEL);
+            const sourceY = y - (LOUPE_SIZE / 2 / ZOOM_LEVEL);
+            const sourceSize = LOUPE_SIZE / ZOOM_LEVEL;
+            
+            // 填充背景色 (避免邊緣透明)
+            loupeCtx.fillStyle = 'white';
+            loupeCtx.fillRect(0, 0, LOUPE_SIZE, LOUPE_SIZE);
+
+            // 從主畫布複製像素並放大
+            loupeCtx.drawImage(
+                mainCanvas, 
+                sourceX, sourceY, sourceSize, sourceSize, // 來源矩形
+                0, 0, LOUPE_SIZE, LOUPE_SIZE              // 目標矩形 (放大)
+            );
+            
+            // 畫十字準心輔助瞄準
+            loupeCtx.beginPath();
+            loupeCtx.moveTo(LOUPE_SIZE/2, 0); loupeCtx.lineTo(LOUPE_SIZE/2, LOUPE_SIZE);
+            loupeCtx.moveTo(0, LOUPE_SIZE/2); loupeCtx.lineTo(LOUPE_SIZE, LOUPE_SIZE/2);
+            loupeCtx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+            loupeCtx.lineWidth = 1;
+            loupeCtx.stroke();
+
+            loupeCtx.restore();
+        }
+
+        // 註冊滑鼠事件
+        // 1. 滑鼠按下：開始顯示放大鏡
+        mainCanvas.addEventListener('mousedown', (e) => {
+            isPanning = true;
+            drawLoupe(e.clientX, e.clientY);
+        });
+
+        // 2. 滑鼠移動：如果按著，持續更新放大鏡內容
+        window.addEventListener('mousemove', (e) => {
+            if (isPanning) {
+                drawLoupe(e.clientX, e.clientY);
+            }
+        });
+
+        // 3. 滑鼠放開：隱藏放大鏡 (這時會觸發原本的 click 事件進行標記)
+        window.addEventListener('mouseup', () => {
+            if (isPanning) {
+                isPanning = false;
+                loupe.style.display = 'none';
+            }
+        });
+    }
+
+    // 啟動外掛
+    // 使用 setTimeout 確保 DOM 元素都已經存在
+    setTimeout(() => {
+        initCoordinateTablePlugin();
+        initMagnifierPlugin();
+    }, 500);
+
+})();
+</script>
 </body>
 </html>
